@@ -8,7 +8,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "vite build"
+    "build": "npx vite build"
   },
   "dependencies": {
     "react": "^19.1.0",
