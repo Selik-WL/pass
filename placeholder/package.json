@@ -1,0 +1,11 @@
+{
+  "engines": {
+    "npm": ">=11.4.2"
+  },
+  "scripts": {
+    "build": "cd client && npm install && vite build && cd ../server && npm install",
+    "start": "node server/src/server.js"
+  },
+  "author": "Selik WL",
+  "license": "MIT"
+}

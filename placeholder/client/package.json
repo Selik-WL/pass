@@ -1,0 +1,19 @@
+{
+  "engines": {
+    "npm": ">=11.4.2"
+  },
+  "name": "client",
+  "version": "1.0.0",
+  "description": "placeholder",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "author": "Selik WL",
+  "license": "MIT"
+}
