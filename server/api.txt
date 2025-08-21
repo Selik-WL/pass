@@ -1,0 +1,171 @@
+INSTALLATION;
+
+To install the server, a zip file (server.zip) of the following files/folders will be given;
+server/
+|   src/
+|   |   controllers/
+|   |   |   ServiceController.js
+|   |    \  UserController.js
+|   |   
+|   |   main/
+|   |   |   app.js
+|   |   |   Router.js
+|   |    \  server.js
+|   |   
+|   |   middleware/
+|   |   |   authAdmin.js
+|   |   |   authOwnOrAdmin.js
+|   |    \  authUser.js
+|   |   
+|   |   models/
+|   |    \  User.js
+|   |   
+|   |   services/
+|   |   |   generator.js
+|   |   |   mongoose.js
+|   |   |   UserServices.js
+|    \   \  ValidationError.js
+|
+|   .env
+|   api.text
+|   package-lock.json
+ \  package.json
+
+In addition to the zip file, you will need the following tools;
+ - Node.js (v18 or later)
+ - npm (Node Package Manager, installed with Node.js)
+ - A terminal/command line (e.g., Terminal, CMD, or VSCode Terminal)
+[optional] - A text/code editor (e.g. TextEdit on mac, notepad on windows, VSCode in general)
+[optional] - A MongoDB account (to connect to your own database)
+[optional] - A Maileroo account (to have new private email verifier key)
+
+Node;
+Node may need to be installed.
+To verify this, open your command line app and then copy & paste the following commands
+    node -v
+    npm -v
+They respectively verify that node and npm are installed by checking their version.
+
+It's highly sugested to run the server on the latest version of node and npm, but 
+any version above 24.3.0 for node, and above 11.4.2 for npm, should be fine.
+In theory, version past 18.0.0 and 8.0.0 would also work, but this hasn't been fully tested.
+To download or update node and npm, go to https://nodejs.org/ and download and install the latest LTS version.
+
+MongoDB;
+To get a mongoDB account, go to https://www.mongodb.com/ and click 'get started'.
+Once you've setup your cluster, you should be brought to the 'Connect to NAME' screen.
+First, in 'Set up connection security', you need to create a user. Keep note of this information (take screenshot, write down, etc). 
+Next, select drivers and then, in 'Choose a connection method', select mongoose for the driver.
+Finally scroll down, and copy the connection string. It should be complete, with your username and password already in. 
+If not, the <> are where they go. (the connect button will give you the string again)
+Once you have the string, add 'mern_proj' right after '.mongodb.net/' (so '.mongodb.net/mern_proj')
+Or you can use your own collection name instead of mern_proj if you want. 
+Save the string somewhere safe for later use.
+Lastly, go down to network access, either modify an existing ip address or add a new, 
+    and then press 'allow any address' and save.
+    You could also restrict the addresses to only your current one or a few.
+
+Maileroo;
+To get a Maileroo account, go to https://maileroo.com/free-email-verification-api and click 'sign up'.
+Select the third option, 'Email Verification', and once on zeruh, scroll down to grab the key.
+Save the key somewhere safe for later use.
+
+Setting Up the server;
+Unzip server.zip, then open your command line, and move to the server folder. 
+(with terminal as example, use cd foldername to move, and ls to list foldernames. 'cd ..' returns backwards once.)
+Run 'npm install' and once it's done, 'npm start' to start the server.
+If configured correctly, you will see an output like:
+    Server is listening on port 8519
+    Connected to MongoDB
+
+.env;
+You can change the keys used by the server in the .env file which is inside the server folder, but the value names must remain the same.
+PORT; basically any number between 1024 to 65535, but the range 8000 to 9000 is suggested. The port is used to communicate with the server.
+MONGODB_URL; the connection string for the database.
+ZERUH_KEY;  The Maileroo/Zeruh api key.
+JWT_KEY; a very long phrase, kept secret, used to encode authenticity tokens.
+DEBUG; true/false, whether the server is in debug mode or not.
+
+Address;
+By default, the address of the server is 'http://localhost:8519' ('http://localhost:<port>'), with IP in .env set to 127.0.0.1.
+This only supports request coming from the same computer which is hosting the server.
+You can also put the server in local mode by changing the IP in .env to 0.0.0.0.
+In local mode, other computers on the same wifi/network can send api request to the server.
+The address will then be the host computer's local IP address;  'http://<IP>:<port>'.
+The address can be obtained in command line with;
+    mac: "ipconfig getifaddr en0"
+    windows: "ipconfig"
+For example, with IP 192.168.86.248, the address would be 'http://192.168.86.248:8519'.
+
+
+INFORMATION;
+
+The server acts like an api which returns a json packet with a type.
+The type is the name under which the data is stored as well as the format.
+
+ex;
+{
+    "type":"example",
+    "example":{
+        "text":"this is an example"
+    }
+}
+
+Here is a list of all packet types an their associated formats;
+
+type;           format(components);
+confirmation    confirmation: string
+credentials     credentials: { userId: string|null, userAdmin: boolean|null, token: string|null }
+error           error: { target: string, message: string }
+multiple        multiple: [ paquet, ... ]
+password        password: string
+user            user: { userId: string, userHandle: string, userEmail: string, userAdmin: boolean }
+typeDoc         typeDoc: { type: string, format: string, description: string }
+routeDoc        routeDoc: { id: string, description: string, accessLevel: string, httpType: string, route: string, inputComponents: [ string, ... ], outputTypes: [ string, ... ],examples: [ { curl: string, result: string, comment: string }, ... ] }
+errorDoc        errorDoc: { target: string, description: string }
+
+#The 'multiple' type serves to send complex responses, such as a list of users, or both confirmation and credentials.
+
+The server works with paths and http request types to determine what is requested.
+Some routes require proof of permission level, which is provided in the form of a bearer token, 
+    placed in the authorization header of the request. "Authorization: Bearer <token>"
+
+Here are the 8 routes, with the access level, access point, inputs and outputs.
+
+#   purpose;            access level;   http;       path;                   input components                output type;
+1   sign up             public          POST        /profils                handle|email|password|admin     error | multiple[ confirmation, credentials ]
+2   delete one          admin           DELETE      /profils/:id            :id                             error | confirmation | multiple[ confirmation, credentials ]
+3   read all            admin           GET         /profils                                                error | multiple[ user, ... ]
+4   read one            self/admin      GET         /profils/:id            :id                             error | user
+5   edit one            self/admin      PUT         /profils/:id            :id|handle|email|password|admin error | confirmation | multiple[ confirmation, credentials ]
+6   create password     public          GET         /motdepasse/:longueur   :longueur                       error | password
+7   log in              public          POST        /profils/login          principal|credential            error | credentials | confirmation
+8   get documentation   public(tiered)  GET         /doc                                                    error | multiple[ typeDoc, ... , errorDoc, ... , routeDoc, ... ]
+
+when the server processes an error, it not only returns an error message, 
+    but also an error target when applicable, showing which field or element is the issue.
+
+Here are the potential error targets;
+
+password:       The password value.
+handle:         The handle value.
+email:          The email value.
+admin:          The admin value.
+identifier:     The id value.
+length:         The length value.
+principal:      The principal (handle or email) in the login.
+credential:     The credential (password) in the login.
+login:          An issue during login.
+server:         An issue with a service or an API.
+unknown:        An unanticipated or unhandled error.
+
+debug mode;
+debug mode, turned on by setting the value DEBUG in the .env file to 'true' and restarting the server, 
+    allows normally blocked information to be passed to the front. Set to 'false' and restart to turn it off.
+
+notably, when not in debug mode;
+    'login' masks 'principal' and 'credential' error.
+    'server' wraps arround any issue that originates from provided services, such as api calls and such.
+    'unknown' wraps arround any issue that was not anticipated and left unhandled.
+In debug mode, any masks are removed, and while wrappers still do so, they now preserve the original error message.
+Additionnally, the routes log their progress through the promises that comprise them, and any errors encountered are logged. 

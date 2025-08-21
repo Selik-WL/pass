@@ -1,0 +1,29 @@
+# Node
+**/node_modules/
+**/dist/
+**/build/
+
+# Logs
+**/*.log
+logs/
+**/logs/
+
+# Env files
+**/.env
+**/.env.*
+
+# Secret files
+**/appSecret*
+
+# Editor stuff
+.vscode/
+.idea/
+*.suo
+*.sw?
+.DS_Store
+Thumbs.db
+
+# OS / temp
+*.tmp
+*.bak
+*.local

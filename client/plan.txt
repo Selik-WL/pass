@@ -1,0 +1,173 @@
+example file structure;
+pass-frontend/
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+│
+├── src/
+│   ├── assets/                      # Static files (images, logos, etc.)
+│   │   └── logo.png
+│   │
+│   ├── components/                 # Reusable components
+│   │   ├── Navbar.js
+│   │   ├── Footer.js
+│   │   ├── LoadingSpinner.js
+│   │   ├── SearchBar.js
+│   │   └── ProtocolCard.js
+│   │
+│   ├── context/                    # Global app state (e.g. AuthContext)
+│   │   └── AuthContext.js
+│   │
+│   ├── pages/                      # Page views based on `page` state
+│   │   ├── Home.js
+│   │   ├── About.js
+│   │   ├── Dashboard.js
+│   │   ├── ProtocolsList.js
+│   │   └── NotFound.js
+│   │
+│   ├── services/                   # API fetch logic, separated from UI
+│   │   ├── api.js                  # Generalized fetch() calls
+│   │   └── auth.js                 # Login/logout helpers
+│   │
+│   ├── App.js                      # Main component with `page` logic
+│   ├── index.js                    # ReactDOM render call
+│   ├── bootstrap.min.css           # Bootstrap import (optional local)
+│   └── config.js                   # Global config (e.g., API_URL base)
+
+
+OK, so here's what I originally proposed;
+<<<4 pages;
+full: deleteOne/readOne/editOne/signUp {has password integrated}
+all: readAll
+doc: Documentation
+log: Login
+
+The view starts on "home page" (what the home page is would change) always. 
+Logged out, you have a button top right for logging in, and a button top left for reading the documentation. 
+Logged as a user, the top right button is now for signing out, the left button is still there, but you now have your user information displayed, along side a button to edit the information.
+Logged as an admin, you have the same buttons as a user, but instead of your user information, you have a list of all the users, along with buttons to edit or delete them. Clicking on one of these user will bring up just their information (like the user home page, but with the documentation button replaced with a listall button)
+
+The "full" page could either be in read or edit mode (first 2 vs last 2), with a delete button being added in delete+read mode. It's mainly a question of wether having the read/edit mode fused in one page works well or not.>>>
+
+I'll be working off this as scaffolding, but just making one addition in the form of a search bar in the all page (top center), which can bring up a single user profile by id.
+{note:I'm tempted to make this into a full blown search bar, supporting search by handle/email/id, and showing a list of potential target users (which would be buttons going to the full page for the relevant user). However, I'm a bit pressed for time, and this isn't necessary, so I'll keep it on the back burner as an addition I can make later on  in a new version if I end up having time for it.} 
+I might also add a button to load the admin's own page in all (button to full), but we'll see.
+
+Now, going back to the page structure I talked about, I'd like to try and work out from it what components or other files would be needed.
+I'd imagine storing the pages in a folder, and having a "home" file load them as required.
+This home file would also be where all the data element are initiated (for those requiring initiation)
+I am thinking of: userlist  for the "hard data"
+Then for navigation and logic, you have; error, message, page and credentials
+The way I'm thinking about this is that, 
+-userlist can hold 0,1 or more set of user data. The first user in the list is the one used for the full page, the full list is used in the all page, and the doc and log pages don't do anything with it.
+-error can hold an error target and an error message. If not null, the current page's error handler is triggered. If it return true (meaning it will handle this target type), the error is cleared, otherwise, the home file's global error manager is triggered. It basically just places the error's message in the message variable.
+-message, when not null, holds a string and create an acknowledgement pop up (basically message + close button, closing it erase the message).
+{Note:perhaps this should be an array to support multiple messages, perhaps not. There shouldn't ever be a need for multiple message with the current route return but who knows I guess?}
+-page, holds the page currently active. (some form of enum or something to pick which page to render?)
+-credentials, hold the userId, userAdmin and token. The userId is used for some routes, such as the user home page (readOne route). The userAdmin is used generally to determine what to load and show. The token is used in all fetch requests as authentification.
+{Note: perhaps these should each be their own variable rather than all stuck together?}
+
+There would also be a fetcher function of some sort. It could be called whenever a fetch request is sent, handling the returned data. (userList is reset when a route is taken){confirmation=>message variable, credentials => credential variable, error => error variable, multiple => iterate through and treat each one as done normally, user => add to userList} (Some would handle the returned data themselves in specific cases, such as the password route. The would still call the fetch, just not passing any data, to ensure userList is properly reset)
+{note: technically, userlist only need to be reset in specific cases, but I think it's simpler to make it absolute even if it means more fetch calls}
+
+Finally, on components;
+For the routes covered so far (ignoring documentation), the only component needed is for users.
+This could either be a tile or a row in a table, or something else entirely, but it should be it's own file.
+However, I'll be using a few more to sepparate out the sections;UserCard, UserList, UserEditor, Popup,and TopBar
+
+chosen file structure;
+
+client/
+|   src/
+|   |   assets/
+|   |   |   na                      # perhaps bootstrap if a local copy is necessary?
+|   |    \  icons/\                 # there probably will be icons eventually
+|   |   
+|   |   components/                 # Reusable components
+|   |   |   basic/                  # small components
+|   |   |   |   CancelButon.jsx
+|   |   |   |   ConfirmButton.jsx
+|   |   |    \  IconButton.jsx
+|   |   |   
+|   |   |   cards/                  # card components
+|   |   |   |   UserCard.jsx
+|   |   |   |   TypeCard.jsx
+|   |   |   |   RouteCard.jsx
+|   |   |    \  ErrorCard.jsx
+|   |   |
+|   |   |   CardList.jsx
+|   |   |   UserForm.jsx
+|   |   |   UserViewer.jsx
+|   |   |   Popup.jsx
+|   |    \  TopBar.jsx
+|   |   
+|   |   context/
+|   |   |   AppContext.jsx          # Manages global states; userlist, errorList, messageList, page and credentials.
+|   |    \  Page.jsx                # pseudoEnum of the page types
+|   |   
+|   |   pages/
+|   |   |   Default.jsx             # The basic page.
+|   |   |   Documentation.jsx       # List of documentation.
+|   |   |   Login.jsx               # Register as user.
+|   |   |   SignUp.jsx              # Sign up as user.
+|   |   |   UserDelete.jsx          # Delete user.
+|   |   |   UserList.jsx            # List of all users.
+|   |   |   UserModify.jsx          # Edit or create user.
+|   |    \  UserView.jsx            # View user.
+|   |
+|   |   services/
+|   |   |   ApiRequests.jsx         # Provides fetch requests, processing returned data.
+|   |    \  Settings.js             # class providing dirrect access to settings in the .env file.
+|   |
+|   |   App.jsx                     # Main component with page logic
+|   |   main.jsx
+|    \  
+|   .env
+|   eslint.config.js
+|   index.html
+|   package-lock.json
+|   package.json
+ \  vite.config.js
+
+
+I was using
+<<< 
+    try {
+        const saved = JSON.parse(localStorage.getItem('credentials'));
+        const isValid = saved?.token && saved.expiresAt > Date.now();
+
+        return isValid ? saved : { userId: null, userAdmin: null, token: null };
+    } catch {
+        return { userId: null, userAdmin: null, token: null };
+    }
+>>>
+as the initial state for credentials.
+I'll revert to empty for the time being, 
+    but this will be reintroduced in v2 along with router and the search bar.
+
+In short, ignore the code fragment up above, it's not pertinent for now.
+
+
+On pages architecture;
+Default:        TopBar
+Login:          {custom form}, CancelButon, ConfirmButton('log in')
+SignUp:         UserForm, CancelButon, ConfirmButton('sign up')
+Documentation:  IconButton(return icon), CardList(TypeCard, RouteCard, ErrorCard)
+UserView:       TopBar, UserViewer, IconButton(edit icon), ADMIN?IconButton(delete icon)
+UserModify:     TopBar, UserForm, CancelButon, ConfirmButton('save changes')
+UserDelete:     TopBar, UserViewer, CancelButon, ConfirmButton('delete user')
+UserList:       TopBar, CardList(UserCard)
+
+App creates Popup for messages, as well as errors not handled by current page.
+
+person for view 							https://icons.getbootstrap.com/icons/person/
+person-gear for edit 						https://icons.getbootstrap.com/icons/person-gear/
+person-dash for delete 						https://icons.getbootstrap.com/icons/person-dash/
+people for list 							https://icons.getbootstrap.com/icons/people/
+
+maybe inside login/signup forms;
+person-add for signup						https://icons.getbootstrap.com/icons/person-add/
+person-check for login 						https://icons.getbootstrap.com/icons/person-check/
+
+person-circle for login/logout				https://icons.getbootstrap.com/icons/person-circle/
+file-earmark-text for documentation 		https://icons.getbootstrap.com/icons/file-earmark-text/
