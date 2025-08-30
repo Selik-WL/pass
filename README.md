@@ -272,7 +272,7 @@ group object;
 
 		adminOnly Boolean, 
 
-		laboratory ObjectID,
+		laboratoryID ObjectID,
 
 		contributorIDs [
 
